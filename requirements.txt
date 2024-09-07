@@ -1,5 +1,5 @@
 ﻿Flask==2.0.1
-werkzeug==2.0.3
+Werkzeug==2.0.3
 asttokens==2.4.1
 blinker==1.8.2
 click==8.1.7
