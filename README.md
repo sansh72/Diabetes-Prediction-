@@ -37,8 +37,9 @@ This project is a **Diabetes Prediction Web Application** using a machine learni
 
 3. **Result Display**: The result (either "The person is diabetic" or "The person isn't diabetic") is displayed on the webpage.
 
-## How to get started##
-pip install numpy pandas scikit-learn flask
-python app.py
+## How to get started
+Here are the required libraries that you would need to install
+1. pip install numpy pandas scikit-learn flask
+2. python app.py
 
 
