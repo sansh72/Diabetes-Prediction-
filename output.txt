@@ -1,1 +1,0 @@
-{'Pregnancies': 10, 'Glucose': 101, 'BloodPressure': 76, 'SkinThickness': 48, 'Insulin': 180, 'BMI': 32, 'DiabetesPedigreeFunction': 0.17, 'Age': 63}
