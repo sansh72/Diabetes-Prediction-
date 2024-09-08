@@ -10,12 +10,11 @@ document.getElementById('diabetesForm').addEventListener('submit', function (eve
         Insulin: parseFloat(document.getElementById('insulin').value),
         BMI: parseFloat(document.getElementById('bmi').value),
         DiabetesPedigreeFunction: parseFloat(document.getElementById('diabetesPedigreeFunction').value),
-        Age: parseFloat(document.getElementById('age').value),
-        Outcome: 0  // Setting Outcome to 0 by default (since it's not used in prediction)
+        Age: parseFloat(document.getElementById('age').value)
     };
   
     // Make a POST request to the Flask API
-    fetch('http://127.0.0.1:5000/predict', {  // Update the URL if Flask runs on a different host
+    fetch('https://diabetes-prediction-58g9.onrender.com/predict', {  // Update this URL to your Render deployment
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -52,5 +51,6 @@ document.getElementById('diabetesForm').addEventListener('submit', function (eve
             resultElement.innerText = '';
         }, 180000);  // 180000 ms = 3 minutes
     });
-  });
+});
+
   
