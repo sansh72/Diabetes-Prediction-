@@ -1,61 +1,44 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, request, jsonify
 from flask_cors import CORS
-import numpy as np
-import pandas as pd
 import joblib
+import pandas as pd
 import os
+import numpy as np  # Import numpy to handle conversion
 
 app = Flask(__name__)
 CORS(app)
 
-# Load the trained model and scaler
-classifier = joblib.load('model_filename.pkl')
-scaler = joblib.load('scaler_filename.pkl')
+# Load your trained model
+model = joblib.load('model_filename.pkl')
 
+@app.route('/predict', methods=['POST'])
 @app.route('/')
 def home():
     return render_template('index.html')
-
-@app.route('/predict', methods=['POST'])
-def predict():
-    try:
-        # Get JSON data from the request
-        data = request.get_json()
-        str_data = str(data)
-        
-        with open('output.txt', 'w') as file:
-            file.write(str_data)
-        
-        # Convert JSON data to DataFrame
-        df = pd.DataFrame([data])  # Wrap in a list to create a DataFrame with one row
-
-        # Check if 'Outcome' column exists and drop it
-        if 'Outcome' in df.columns:
-            df = df.drop(columns='Outcome')
-
-        # Convert to numpy array and reshape
-        numpy_array = np.asarray(df)
-        numpy_reshaped = numpy_array.reshape(1, -1)
-
-        # Standardize the input data
-        std_data = scaler.transform(numpy_reshaped)
-
-        # Make prediction
-        prediction = classifier.predict(std_data)
-
-        # Return the result
-        if prediction[0] == 1:
-            result = "The person is diabetic"
-        else:
-            result = "The person isn't diabetic"
-
-        return jsonify({'result': result})
     
-    except Exception as e:
-        app.logger.error(f'Error in predict function: {e}')
-        return jsonify({'error': 'An error occurred during prediction'}), 500
+def predict():
+    data = request.json
+
+    # Create DataFrame from input data
+    columns = ["crim", "zn", "indus", "chas", "nox", "rm", "age", "dis", "rad", "tax", "ptratio", "b", "lstat"]
+    input_data = [[
+        data['crim'], data['zn'], data['indus'], data['chas'], data['nox'],
+        data['rm'], data['age'], data['dis'], data['rad'], data['tax'],
+        data['ptratio'], data['b'], data['lstat']
+    ]]
+
+    df_data = pd.DataFrame(input_data, columns=columns)
+    df_data["chas"] = pd.to_numeric(df_data["chas"], errors='coerce')
+
+    # Predict using the model
+    result = model.predict(df_data)
+
+    # Convert numpy.float32 to Python float
+    prediction = float(result[0])*1000
+
+    # Return the prediction as a JSON response
+    return jsonify({'price': prediction})
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))  # Use the port set by the environment, default to 5000
     app.run(host='0.0.0.0', port=port, debug=True)
-
