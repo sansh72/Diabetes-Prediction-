@@ -1,43 +1,50 @@
 from flask import Flask, request, jsonify
-from flask_cors import CORS
-import joblib
+from flask_cors import CORS  # Import CORS
+import numpy as np
 import pandas as pd
+import joblib
+import time
 import os
-import numpy as np  # Import numpy to handle conversion
 
 app = Flask(__name__)
 CORS(app)
 
-# Load your trained model
-model = joblib.load('model_filename.pkl')
+# Load the trained model and scaler
+classifier = joblib.load('model_filename.pkl')
+scaler = joblib.load('scaler_filename.pkl')
 
 @app.route('/predict', methods=['POST'])
-@app.route('/')
-def home():
-    return render_template('index.html')
-    
 def predict():
-    data = request.json
+    # Get JSON data from the request
+    data = request.get_json()
+    str_data = str(data)
 
-    # Create DataFrame from input data
-    columns = ["crim", "zn", "indus", "chas", "nox", "rm", "age", "dis", "rad", "tax", "ptratio", "b", "lstat"]
-    input_data = [[
-        data['crim'], data['zn'], data['indus'], data['chas'], data['nox'],
-        data['rm'], data['age'], data['dis'], data['rad'], data['tax'],
-        data['ptratio'], data['b'], data['lstat']
-    ]]
+    with open('output.txt', 'w') as file:
+        file.write(str_data)
+    # Convert JSON data to DataFrame
 
-    df_data = pd.DataFrame(input_data, columns=columns)
-    df_data["chas"] = pd.to_numeric(df_data["chas"], errors='coerce')
+    df = pd.DataFrame([data])  # Wrap in a list to create a DataFrame with one row
+    df = df.drop(columns='Outcome',axis = 1)
 
-    # Predict using the model
-    result = model.predict(df_data)
+    # Convert to numpy array and reshape
+    numpy_array = np.asarray(df)
+    numpy_reshaped = numpy_array.reshape(1, -1)
 
-    # Convert numpy.float32 to Python float
-    prediction = float(result[0])*1000
+    # Standardize the input data
+    scaler.fit(numpy_reshaped)
+    std_data = scaler.transform(numpy_reshaped)
 
-    # Return the prediction as a JSON response
-    return jsonify({'price': prediction})
+    # Make prediction
+    prediction = classifier.predict(std_data)
+
+    # Return the result
+    if prediction[0] == 1:
+        result = "The person is diabetic"
+    else:
+        result = "The person isn't diabetic"
+
+    return jsonify({'result': result})
+
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))  # Use the port set by the environment, default to 5000
