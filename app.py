@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify, render_template
-from flask_cors import CORS  # Import CORS
+from flask_cors import CORS
 import numpy as np
 import pandas as pd
 import joblib
@@ -12,21 +12,25 @@ CORS(app)
 classifier = joblib.load('model_filename.pkl')
 scaler = joblib.load('scaler_filename.pkl')
 
-@app.route('/predict', methods=['POST'])
 @app.route('/')
 def home():
     return render_template('index.html')
+
+@app.route('/predict', methods=['POST'])
 def predict():
     # Get JSON data from the request
     data = request.get_json()
     str_data = str(data)
 
+    # Save data for debugging (optional)
     with open('output.txt', 'w') as file:
         file.write(str_data)
-    
+
     # Convert JSON data to DataFrame
     df = pd.DataFrame([data])  # Wrap in a list to create a DataFrame with one row
-    df = df.drop(columns='Outcome', axis=1)  # Drop the 'Outcome' column if it exists
+
+    if 'Outcome' in df.columns:
+        df = df.drop(columns='Outcome')  # Drop the 'Outcome' column if it exists
 
     # Convert to numpy array and reshape
     numpy_array = np.asarray(df)
@@ -45,7 +49,6 @@ def predict():
         result = "The person isn't diabetic"
 
     return jsonify({'result': result})
-
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))  # Use the port set by the environment, default to 5000
