@@ -3,7 +3,6 @@ from flask_cors import CORS  # Import CORS
 import numpy as np
 import pandas as pd
 import joblib
-import time
 import os
 
 app = Flask(__name__)
@@ -14,6 +13,9 @@ classifier = joblib.load('model_filename.pkl')
 scaler = joblib.load('scaler_filename.pkl')
 
 @app.route('/predict', methods=['POST'])
+@app.route('/')
+def home():
+    return render_template('index.html')
 def predict():
     # Get JSON data from the request
     data = request.get_json()
@@ -21,18 +23,17 @@ def predict():
 
     with open('output.txt', 'w') as file:
         file.write(str_data)
+    
     # Convert JSON data to DataFrame
-
     df = pd.DataFrame([data])  # Wrap in a list to create a DataFrame with one row
-    df = df.drop(columns='Outcome',axis = 1)
+    df = df.drop(columns='Outcome', axis=1)  # Drop the 'Outcome' column if it exists
 
     # Convert to numpy array and reshape
     numpy_array = np.asarray(df)
     numpy_reshaped = numpy_array.reshape(1, -1)
 
     # Standardize the input data
-    scaler.fit(numpy_reshaped)
-    std_data = scaler.transform(numpy_reshaped)
+    std_data = scaler.transform(numpy_reshaped)  # Use only transform, not fit
 
     # Make prediction
     prediction = classifier.predict(std_data)
